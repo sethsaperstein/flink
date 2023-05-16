@@ -136,7 +136,7 @@ class SqlClientTest {
     }
 
     @Test
-    void testGatewayMode() throws Exception {
+    void testGatewayModeHostnamePort() throws Exception {
         String[] args =
                 new String[] {
                     "gateway",
@@ -145,6 +145,21 @@ class SqlClientTest {
                                     SQL_GATEWAY_REST_ENDPOINT_EXTENSION.getTargetAddress(),
                                     SQL_GATEWAY_REST_ENDPOINT_EXTENSION.getTargetPort())
                             .toString()
+                };
+        String actual = runSqlClient(args, String.join("\n", "SET;", "QUIT;"), false);
+        assertThat(actual).contains("execution.target", "yarn-session");
+    }
+
+    @Test
+    void testGatewayModeUrl() throws Exception {
+        String[] args =
+                new String[] {
+                    "gateway",
+                    "-e",
+                    String.format(
+                            "http://%s:%d",
+                            SQL_GATEWAY_REST_ENDPOINT_EXTENSION.getTargetAddress(),
+                            SQL_GATEWAY_REST_ENDPOINT_EXTENSION.getTargetPort())
                 };
         String actual = runSqlClient(args, String.join("\n", "SET;", "QUIT;"), false);
         assertThat(actual).contains("execution.target", "yarn-session");
