@@ -127,12 +127,16 @@ public class RestClient implements AutoCloseableAsync {
 
     private final AtomicBoolean isRunning = new AtomicBoolean(true);
 
+    public static final String VERSION_PLACEHOLDER = "{{VERSION}}";
+
     // Used to track unresolved request futures in case they need to be resolved when the client is
     // closed
     private final Collection<CompletableFuture<Channel>> responseChannelFutures =
             ConcurrentHashMap.newKeySet();
 
-    private final List<OutboundChannelHandlerFactory> outboundChannelHandlerFactories;
+    private final String urlPrefix;
+
+    @VisibleForTesting List<OutboundChannelHandlerFactory> outboundChannelHandlerFactories;
 
     public RestClient(Configuration configuration, Executor executor)
             throws ConfigurationException {
@@ -166,6 +170,11 @@ public class RestClient implements AutoCloseableAsync {
         }
         outboundChannelHandlerFactories.sort(
                 Comparator.comparingInt(OutboundChannelHandlerFactory::priority).reversed());
+
+        urlPrefix = configuration.get(RestOptions.URL_PREFIX);
+        Preconditions.checkArgument(
+                urlPrefix.startsWith("/") && urlPrefix.endsWith("/"),
+                "urlPrefix must start and end with '/'");
 
         final RestClientConfiguration restConfiguration =
                 RestClientConfiguration.fromConfiguration(configuration);
@@ -400,7 +409,9 @@ public class RestClient implements AutoCloseableAsync {
         }
 
         String versionedHandlerURL =
-                "/" + apiVersion.getURLVersionPrefix() + messageHeaders.getTargetRestEndpointURL();
+                constructVersionedHandlerUrl(
+                        messageHeaders, apiVersion.getURLVersionPrefix(), this.urlPrefix);
+
         String targetUrl = MessageParameters.resolveUrl(versionedHandlerURL, messageParameters);
 
         LOG.debug(
@@ -439,6 +450,16 @@ public class RestClient implements AutoCloseableAsync {
         }
 
         return submitRequest(targetAddress, targetPort, httpRequest, responseType);
+    }
+
+    private static <M extends MessageHeaders<?, ?, ?>> String constructVersionedHandlerUrl(
+            M messageHeaders, String urlVersionPrefix, String urlPrefix) {
+        String targetUrl = messageHeaders.getTargetRestEndpointURL();
+        if (targetUrl.contains(VERSION_PLACEHOLDER)) {
+            return targetUrl.replace(VERSION_PLACEHOLDER, urlVersionPrefix);
+        } else {
+            return urlPrefix + urlVersionPrefix + messageHeaders.getTargetRestEndpointURL();
+        }
     }
 
     private static Request createRequest(
