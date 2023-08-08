@@ -28,7 +28,7 @@ under the License.
 
 	<groupId>org.apache.flink</groupId>
 	<artifactId>flink-parent</artifactId>
-	<version>1.17-SNAPSHOT</version>
+	<version>1.17.1-fc</version>
 
 	<name>Flink : </name>
 	<packaging>pom</packaging>
@@ -61,6 +61,13 @@ under the License.
 			</releases>
 		</repository>
 	</repositories>
+
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/sethsaperstein/flink</url>
+		</repository>
+	</distributionManagement>
 
 	<modules>
 		<module>flink-annotations</module>
