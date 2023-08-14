@@ -128,13 +128,7 @@ public class CliOptions {
                 String updateStatement,
                 String historyFilePath,
                 @Nullable URL gatewayAddress) {
-            super(
-                    isPrintHelp,
-                    sessionId,
-                    initFile,
-                    sqlFile,
-                    updateStatement,
-                    historyFilePath);
+            super(isPrintHelp, sessionId, initFile, sqlFile, updateStatement, historyFilePath);
 
             this.gatewayAddress = gatewayAddress;
         }
